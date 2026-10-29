@@ -129,7 +129,12 @@ function Install-UserAzCopy {
 }
 
 if ($InstallDependencies) {
-    Invoke-CheckedCommand -Command python -Arguments @('-m', 'pip', 'install', '-r', (Join-Path $repoRoot 'requirements-dev.txt'), '-r', (Join-Path $repoRoot 'requirements-docs.txt')) -Description 'Installing pinned Python dependencies'
+    # Invoke-CheckedCommand -Command python -Arguments @('-m', 'pip', 'install', '-r', (Join-Path $repoRoot 'requirements-dev.txt'), '-r', (Join-Path $repoRoot 'requirements-docs.txt')) -Description 'Installing pinned Python dependencies'
+    $venvPython = Join-Path $repoRoot '.venv/bin/python'
+if (-not (Test-Path -LiteralPath $venvPython)) {
+    throw "Virtual environment Python not found at $venvPython. Create it with: python3.12 -m venv .venv"
+}
+Invoke-CheckedCommand -Command $venvPython -Arguments @('-m', 'pip', 'install', '-r', (Join-Path $repoRoot 'requirements-dev.txt'), '-r', (Join-Path $repoRoot 'requirements-docs.txt')) -Description 'Installing pinned Python dependencies'
     Invoke-CheckedCommand -Command az -Arguments @('bicep', 'install', '--version', 'v0.46.1') -Description 'Installing pinned Bicep through Azure CLI'
     Invoke-CheckedCommand -Command az -Arguments @('extension', 'add', '--name', 'containerapp', '--version', $pinnedContainerAppExtensionVersion, '--only-show-errors') -Description "Installing pinned Container Apps extension $pinnedContainerAppExtensionVersion"
     Install-UserAzCopy
